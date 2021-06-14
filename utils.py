@@ -4,43 +4,51 @@ import pandas as pd
 from pathlib import Path
 
 
+class ImportCSV(object):
+    def __init__(self):
+        self.base_path = Path(os.path.abspath(os.getcwd()))
+        self.pq_path = self.base_path / 'parquet_files'
+        self.csv_path = self.base_path / 'challenge_datasets'
+        os.makedirs(self.pq_path, 0o777, exist_ok=True)
+
+    def get_data_from_csv(self):
+        frames = []
+        for csv_file in get_csv_files(self.csv_path):
+            # print(csv_file)
+            df = pd.read_csv(csv_file)
+            df.fillna('', inplace=True)
+
+            # # convert timestamp to datetime
+            # df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+            # extract tag column
+            df[['empty', 'site', 'asset', 'column']] = df['tag'].str.split(
+                '/', expand=True
+            )
+
+            # remove empty column and add dataframe to list
+            del df['empty']
+            frames.append(df)
+
+        # return combined dataframes
+        return pd.concat(frames)
+
+
 def get_csv_files(file_path):
-    csv_path = file_path / 'challenge_datasets'
     csv_list = list((
-        str(csv_path / f) for f in os.listdir(csv_path)
+        str(file_path / f) for f in os.listdir(file_path)
     ))
     for csv in csv_list:
         yield csv
 
 
-def get_data_from_csv(file_path):
-    frames = []
-    for csv_file in get_csv_files(file_path):
-        # print(csv_file)
-        df = pd.read_csv(csv_file)
-        df.fillna('', inplace=True)
-
-        # # convert timestamp to datetime
-        # df['timestamp'] = pd.to_datetime(df['timestamp'])
-
-        # extract tag column
-        df[['empty', 'site', 'asset', 'column']] = df['tag'].str.split(
-            '/', expand=True
-        )
-
-        # remove empty column and add dataframe to list
-        del df['empty']
-        frames.append(df)
-
-    # return combined dataframes
-    return pd.concat(frames)
-
-
 if __name__ == '__main__':
     bt = time.perf_counter()
 
-    # set base path
+    # set base and parquet out files path
     base_path = Path(os.path.abspath(os.getcwd()))
+    pq_path = base_path / 'parquet_files'
+    os.makedirs(pq_path, 0o777, exist_ok=True)
 
     # pull data from csv files into dataframe
     n_wave_df = get_data_from_csv(base_path)

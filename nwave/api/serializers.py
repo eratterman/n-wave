@@ -5,7 +5,7 @@ from .models import Asset, Column
 class AssetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Asset
-        fields = ('id', 'Asset')
+        fields = ('id', 'asset')
 
 
 class ColumnSerializer(serializers.HyperlinkedModelSerializer):
