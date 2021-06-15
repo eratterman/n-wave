@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 PARQUET_FILES_DIR = BASE_DIR.parent / 'parquet_files'
-CSV_PATH = BASE_DIR.parent / 'challenge_datasets'
 os.makedirs(PARQUET_FILES_DIR, 0o777, exist_ok=True)
 
 
@@ -59,7 +58,7 @@ ROOT_URLCONF = 'nwave.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'api' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
