@@ -17,7 +17,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PARQUET_FILES_DIR = BASE_DIR.parent / 'parquet_files'
 os.makedirs(PARQUET_FILES_DIR, 0o777, exist_ok=True)
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -58,7 +57,9 @@ ROOT_URLCONF = 'nwave.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'api' / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'api' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

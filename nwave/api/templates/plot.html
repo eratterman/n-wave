@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>N-Wave</title>
+    <!-- bootstrap -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+          integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
+          crossorigin="anonymous"
+    >
+  </head>
+  <body>
+    <style>
+      select {
+        width: 100%;
+        border-radius: 4px;
+      }
+    </style>
+    <div class="container">
+      <div class="jumbotron">
+        <h2>Plot Data</h2>
+      </div>
+
+      <!-- modal trigger -->
+      <button type="button" class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#plotDataModal">
+        Plot Data
+      </button>
+
+      <!-- Modal -->
+      <div class="modal fade" id="plotDataModal" tabindex="-1" aria-labelledby="plotDataModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+            <form action="" method=""  enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="modal-header">
+                <h5 class="modal-title" id="plotDataModalLabel">Import CSV Files</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div> <!-- / modal-header -->
+
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-md-10 offset-md-1">
+                    <p><label for="assetSelect"><strong>Select Asset: </strong></label></p>
+                    <p><select name="assetSelect" id="assetSelect"></select></p>
+                  </div> <!-- / col-md-10 offset-md-1 -->
+                </div> <!-- / row -->
+                <div class="d-none" id="showColumnDiv">
+                  <div class="row">
+                    <div class="col-md-10 offset-md-1">
+                      <p><label for="columnSelect"><strong>Select Column: </strong></label></p>
+                      <p><select name="columnSelect" id="columnSelect"></select></p>
+                    </div> <!-- / col-md-10 offset-md-1 -->
+                  </div> <!-- / row -->
+                </div> <!-- / d-none -->
+                <div class="d-none"id="showBegDateDiv">
+                  <div class="row">
+                    <div class="col-md-10 offset-md-1">
+                      <p><label for="begDateSelect"><strong>Select Start Date: </strong></label></p>
+                      <p><select name="begDateSelect" id="begDateSelect"></select></p>
+                    </div> <!-- / col-md-10 offset-md-1 -->
+                  </div> <!-- / row -->
+                </div> <!-- / d-none -->
+                <div class="d-none" id="showEndDateDiv">
+                  <div class="row">
+                    <div class="col-md-10 offset-md-1">
+                      <p><label for="endDateSelect"><strong>Select End Date: </strong></label>0</p>
+                      <p><select name="endDateSelect" id="endDateSelect"></select></p>
+                    </div> <!-- / col-md-10 offset-md-1 -->
+                  </div> <!-- / row -->
+                </div> <!-- / d-none -->
+              </div> <!-- / modal-body -->
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-xs btn-secondary" data-dismiss="modal">Cancel</button>
+                <button id="submitPlot" type="submit" class="btn btn-xs btn-primary">Plot Selections</button>
+              </div> <!-- / modal-footer -->
+            </form> <!-- / form -->
+
+          </div> <!-- / modal-content -->
+        </div> <!-- / modal-dialog -->
+      </div> <!-- / modal fade -->
+    </div> <!-- / container -->
+    <!-- js imports -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+            crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
+            crossorigin="anonymous">
+    </script>
+
+    <!-- page javascript -->
+    <script>
+      'use strict'
+      let data = JSON.parse("{{data|escapejs}}");
+
+      $(document).ready( function() {
+        // handle asset options
+        let assetList = data['assets'];
+        let assetOptions = '<option value=""> -- Select Asset -- </option>'
+        $.each( assetList, function(i) {
+          assetOptions += '<option value="' + assetList[i] + '">' + assetList[i] + '</option>'
+        })
+        $( '#assetSelect' ).empty().append(assetOptions);
+
+        // handle column options
+        let columnList = data['columns'];
+        let columnOptions = '<option value=""> -- Select Column -- </option>'
+        $.each( columnList, function(i) {
+          columnOptions += '<option value="' + columnList[i] + '">' + columnList[i] + '</option>'
+        })
+        $( '#columnSelect' ).empty().append(columnOptions);
+
+        // handle date column options
+        let dateList = data['dates'];
+        let begDateOptions = '<option value=""> -- Select Start Date -- </option>'
+        let endDateOptions = '<option value=""> -- Select End Date -- </option>'
+        $.each( dateList, function(i) {
+          begDateOptions += '<option value="' + dateList[i] + '">' + dateList[i] + '</option>'
+          endDateOptions += '<option value="' + dateList[i] + '">' + dateList[i] + '</option>'
+        })
+        $( '#begDateSelect' ).empty().append(begDateOptions);
+        $( '#endDateSelect' ).empty().append(endDateOptions);
+      })
+
+      $( '#assetSelect' ).change( function() {
+        $( '#showColumnDiv' ).removeClass( 'd-none' );
+      })
+      $( '#columnSelect' ).change( function() {
+        $( '#showBegDateDiv' ).removeClass( 'd-none' );
+      })
+      $( '#showBegDateDiv' ).change( function() {
+        $( '#showEndDateDiv' ).removeClass( 'd-none' );
+      })
+
+      $( '#submitPlot' ).on( 'click', function (e) {
+        $( '#plotDataModal' ).hide();
+        // make ajax call to api
+      })
+    </script>
+  </body>
+</html>
