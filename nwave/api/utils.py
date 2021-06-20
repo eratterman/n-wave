@@ -1,6 +1,5 @@
 import os
 import time
-import datetime
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -19,9 +18,6 @@ class ImportDataFromCSV(object):
             # read data from csv
             df = pd.read_csv(csv_file)
             df.fillna('', inplace=True)
-
-            # convert timestamp to datetime
-            # df['timestamp'] = pd.to_datetime(df['timestamp'])
 
             # extract tag column
             df[['empty', 'site', 'asset', 'column']] = df['tag'].str.split(
@@ -64,24 +60,21 @@ class ParquetFiles(object):
         self.beg_date = kwargs.get('beg_date', '')
         self.end_date = kwargs.get('end_date', '')
         self.data_frame = None
-        # self.options_xref = {
-        #     'asset': kwargs.get('asset', ''),
-        #     'column': kwargs.get('column', ''),
-        #     'beg_date': kwargs.get('beg_date', ''),
-        #     'end_date': kwargs.get('end_date', '')
-        # }
 
     def save_dataframe_to_parquet(self):
         if self.data_frame is None:
             print(f'please set obj.data_frame - <pandas dataframe object>')
             return None
 
+        # split out year and month for partitions
         self.data_frame['year'] = pd.DatetimeIndex(
             self.data_frame['timestamp']
         ).year
         self.data_frame['month'] = pd.DatetimeIndex(
             self.data_frame['timestamp']
         ).month
+
+        # write to partitioned parquet file
         table = pa.Table.from_pandas(self.data_frame)
         pq.write_to_dataset(
             table,
@@ -103,26 +96,11 @@ class ParquetFiles(object):
 
         if self.end_date:
             filters.append(('timestamp', '<=', self.end_date))
-        # for key, val in self.options_xref.items():
-        #     if not val:
-        #         continue
-        #
-        #     if key == 'column':
-        #         filters.append((val, '!=', ''))
-        #     elif key == 'asset':
-        #         filters.append((key, '==', val))
-        #     elif key == 'beg_date':
-        #         filters.append(('timestamp', '>=', val))
-        #     else:
-        #         filters.append(('timestamp', '<=', val))
 
         if not filters:
             dataset = pq.ParquetDataset(self.file_path)
         else:
-            dataset = pq.ParquetDataset(
-                self.file_path,
-                filters=filters
-            )
+            dataset = pq.ParquetDataset(self.file_path, filters=filters)
 
         self.data_frame = dataset.read_pandas().to_pandas()
         return self.data_frame
@@ -139,7 +117,11 @@ class ParquetFiles(object):
             filtered = filtered.loc[between_two_dates]
 
         # copy columns to new dataframe and return records dictionary
-        new_df = filtered[['timestamp', 'asset', self.column]].copy()
+        filters = ['timestamp', 'asset']
+        if self.column:
+            filters.append(self.column)
+
+        new_df = filtered[filters].copy()
         return new_df.to_dict('records')
 
 
@@ -162,7 +144,7 @@ if __name__ == '__main__':
     # csv_file_list = list((
     #     path_to_csv_files / f for f in csv_file_list
     # ))
-
+    #
     # nw = ImportDataFromCSV(csv_file_list)
     # nw_df = nw.get_data_from_csv()
     # counts = nw.get_num_columns_per_asset()
@@ -170,7 +152,6 @@ if __name__ == '__main__':
     # print(f'num assets: {len(asset_xref)}')
     # for key, val in asset_xref.items():
     #     print(f'asset: {key} - col: {val}')
-    #
 
     # start_date = '2020-10-03 00:00:00'
     # end_date = '2020-10-03 23:59:59'

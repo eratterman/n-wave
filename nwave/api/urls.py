@@ -13,4 +13,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('import/', views.ImportFilesView.as_view(), name='import'),
     path('plot/', views.PlotDataView.as_view(), name='plot'),
+    path('plot_data/', views.ParquetGetView.as_view(), name='plot_data')
 ]

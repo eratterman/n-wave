@@ -9,12 +9,17 @@
           integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
           crossorigin="anonymous"
     >
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
   </head>
   <body>
     <style>
       select {
         width: 100%;
         border-radius: 4px;
+      }
+      .dygraph-title {
+        color: gray;
       }
     </style>
     <div class="container">
@@ -23,7 +28,7 @@
       </div>
 
       <!-- modal trigger -->
-      <button type="button" class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#plotDataModal">
+      <button id="plotBtn" type="button" class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#plotDataModal">
         Plot Data
       </button>
 
@@ -67,7 +72,7 @@
                 <div class="d-none" id="showEndDateDiv">
                   <div class="row">
                     <div class="col-md-10 offset-md-1">
-                      <p><label for="endDateSelect"><strong>Select End Date: </strong></label>0</p>
+                      <p><label for="endDateSelect"><strong>Select End Date: </strong></label></p>
                       <p><select name="endDateSelect" id="endDateSelect"></select></p>
                     </div> <!-- / col-md-10 offset-md-1 -->
                   </div> <!-- / row -->
@@ -76,28 +81,56 @@
 
               <div class="modal-footer">
                 <button type="button" class="btn btn-xs btn-secondary" data-dismiss="modal">Cancel</button>
-                <button id="submitPlot" type="submit" class="btn btn-xs btn-primary">Plot Selections</button>
+                <button id="submitPlot" type="submit" class="btn btn-xs btn-primary" data-dismiss="modal">Plot Selections</button>
               </div> <!-- / modal-footer -->
             </form> <!-- / form -->
 
           </div> <!-- / modal-content -->
         </div> <!-- / modal-dialog -->
       </div> <!-- / modal fade -->
-    </div> <!-- / container -->
-    <!-- js imports -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-            crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
-            crossorigin="anonymous">
-    </script>
 
+      <!-- render chart -->
+      <div class="row">
+        <div class="col-md-10 offset-md-1">
+          <div id="plotChart" style="height: 500px"></div>
+        </div>
+      </div>
+    </div> <!-- / container -->
+
+    <!-- js imports -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+            crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+            crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
+            integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
+            crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
     <!-- page javascript -->
     <script>
-      'use strict'
       let data = JSON.parse("{{data|escapejs}}");
+      let optionsData = {};
+      let chartText = '';
+
+      function plotChartData( data, url, column, text ) {
+        let g = new Dygraph(
+          document.getElementById("plotChart"),
+          text,
+          {
+            legend: 'always',
+            title: data['title'],
+            ylabel: data['column'],
+            showRoller: true,
+            rollPeriod: 8
+          }
+        );
+        return g;
+      }
 
       $(document).ready( function() {
         // handle asset options
@@ -137,11 +170,43 @@
       $( '#showBegDateDiv' ).change( function() {
         $( '#showEndDateDiv' ).removeClass( 'd-none' );
       })
-
-      $( '#submitPlot' ).on( 'click', function (e) {
-        $( '#plotDataModal' ).hide();
-        // make ajax call to api
+      $( '#plotBtn' ).on( 'click', function() {
+        $( '#assetSelect' ).val( '' );
+        $( '#columnSelect' ).val( '' );
+        $( '#begDateSelect' ).val( '' );
+        $( '#endDateSelect' ).val( '' );
       })
+
+      $( '#submitPlot' ).on( 'click', function () {
+        let asset = $( '#assetSelect' ).val();
+        let column = $( '#columnSelect' ).val();
+        let url = 'http://localhost:8000/plot_data/?';
+        url += 'asset=' + asset + '&column=' + column;
+        url += '&beg_date=' + $( '#begDateSelect' ).val();
+        url += '&end_date=' + $( '#endDateSelect' ).val();
+
+        // set options and string data
+        optionsData['title'] = 'Asset: ' + asset;
+        optionsData['column'] = column
+        chartText = 'TimeStamp,' + column + '\n'
+
+        // make ajax call to api
+        $.ajax({
+          type: 'GET',
+          url: url,
+          success: function ( data ) {
+            let text = ''
+            for ( let i = 0; i < data.data.length; i++ ) {
+              if ( data.data[i]['timestamp'] && data.data[i][column] ) {
+                text += data.data[i]['timestamp'] + ',' + data.data[i][column] + '\n'
+              }
+            }
+            chartText += text
+            plotChartData( optionsData, url, column, chartText );
+          }
+        })
+      });
+
     </script>
   </body>
 </html>
