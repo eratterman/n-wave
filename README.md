@@ -1,6 +1,6 @@
 # n-wave
 ## Installation Instructions: ##
-1. Clone project "n-wave": ```https://github.com/eratterman/n-wave.git```
+1. Clone project "n-wave": ```https://github.com/eratterman/n-wave```
 2. Create python 3 virtual environment outside of project directory
 3. Navigate to Scripts directory inside the virtual environment and activate virtual environment.
 4. Install python modules from requirements.txt file in project: ```pip install -r requirements.txt```
