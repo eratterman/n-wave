@@ -19,11 +19,11 @@
 4. Navigate to the directory where the csv files are stored
 5. Select all files and click Open
 6. Click the Import Files on the pop up dialog box.
-> **NOTE:** This step currently takes around 2 min 
-> The import of data into pandas is quick, but it's also loading data into the models
+> **NOTE:** This step currently takes around 2 min   
+> The import of data into pandas is quick, but it's also loading data into the models  
 7. When import completes, you will see some links on the page
-> To API Root
-> Plot Data
+> To API Root  
+> Plot Data  
 
 8. Click Plot Data link
 9. Click Plot Data button and select the Asset, Column, Beginning Date, and Ending Dates from the select lists.
